@@ -1,9 +1,6 @@
 # GOAT 🐐
 *Go Orchestration & Automation Toolkit*
 
-> **Logo Placeholder**  
-> *(Add your project logo here)*
-
 ---
 
 ## Introduction
