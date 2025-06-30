@@ -1,0 +1,29 @@
+{
+  "id": "workflow-001",
+  "name": "Send Slack Alert on New GitHub Issue",
+  "description": "Alert Slack when a new GitHub issue is created.",
+  "created_at": "2024-06-01T12:00:00Z",
+  "updated_at": "2024-06-01T12:00:00Z",
+  "nodes": {
+    "trigger1": {
+      "id": "trigger1",
+      "type": "trigger",
+      "name": "GitHub Issue Created",
+      "plugin": "github.issue.created",
+      "inputs": {
+        "repo": "your-org/your-repo"
+      },
+      "next": ["action1"]
+    },
+    "action1": {
+      "id": "action1",
+      "type": "action",
+      "name": "Send Slack Message",
+      "plugin": "slack.send_message",
+      "inputs": {
+        "channel": "#alerts",
+        "message": "New GitHub issue: {{trigger1.title}}"
+      }
+    }
+  }
+}
