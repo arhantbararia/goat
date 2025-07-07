@@ -1,35 +1,24 @@
-package workflow
+package models
 
 import "time"
 
-// NodeType represents the type of a workflow node.
 type NodeType string
 
 const (
-	NodeTypeTrigger NodeType = "trigger"
-	NodeTypeAction  NodeType = "action"
+	NodeTypeTrigger   NodeType = "trigger"
+	NodeTypeAction    NodeType = "action"
 	NodeTypeCondition NodeType = "condition"
 )
 
 // Node represents a single node in the workflow DAG.
 type Node struct {
-	ID       string                 `json:"id"`
-	Type     NodeType               `json:"type"`
-	Name     string                 `json:"name"`
-	Plugin   string                 `json:"plugin"` // e.g., "github.issue.created"
-	Inputs   map[string]interface{} `json:"inputs,omitempty"`
-	Outputs  map[string]interface{} `json:"outputs,omitempty"`
-	Next     []string               `json:"next,omitempty"` // IDs of next nodes
-}
-
-// Workflow represents a workflow as a DAG of nodes.
-type Workflow struct {
-	ID          string            `json:"id"`
-	Name        string            `json:"name"`
-	Description string            `json:"description,omitempty"`
-	Nodes       map[string]*Node  `json:"nodes"`
-	CreatedAt   time.Time         `json:"created_at"`
-	UpdatedAt   time.Time         `json:"updated_at"`
+	ID      string                 `json:"id"`
+	Type    NodeType               `json:"type"`
+	Name    string                 `json:"name"`
+	Plugin  string                 `json:"plugin"` // e.g., "github.issue.created"
+	Inputs  map[string]interface{} `json:"inputs,omitempty"`
+	Outputs map[string]interface{} `json:"outputs,omitempty"`
+	Next    []string               `json:"next,omitempty"` // IDs of next nodes
 }
 
 // Trigger represents a trigger node.

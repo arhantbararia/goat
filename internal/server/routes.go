@@ -6,16 +6,6 @@ import (
 	"net/http"
 )
 
-func (s *Server) RegisterRoutes() http.Handler {
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", s.HelloWorldHandler)
-
-	mux.HandleFunc("/health", s.healthHandler)
-
-	return mux
-}
-
 func (s *Server) HelloWorldHandler(w http.ResponseWriter, r *http.Request) {
 	resp := make(map[string]string)
 	resp["message"] = "Hello World"
