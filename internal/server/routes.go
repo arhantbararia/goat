@@ -27,3 +27,7 @@ func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, _ = w.Write(jsonResp)
 }
+
+func (s *Server) handlCreateWorkflow(w http.ResponseWriter, r *http.Request) {
+	
+}
