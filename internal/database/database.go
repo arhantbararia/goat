@@ -4,8 +4,8 @@ import (
 	"context"
 )
 
-// Database is a generic interface for database operations.
-type Database interface {
+// // // Service represents a service that interacts with a database.
+type Service interface {
 	// Health returns a map of health status information.
 	Health() map[string]string
 
