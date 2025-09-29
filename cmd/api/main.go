@@ -9,7 +9,11 @@ import (
 	"syscall"
 	"time"
 
+ 
+	"goat/internal/database"
+	"goat/internal/engine"
 	"goat/internal/server"
+	"goat/plugins/slack"
 )
 
 func gracefulShutdown(apiServer *http.Server, done chan bool) {
@@ -40,6 +44,24 @@ func gracefulShutdown(apiServer *http.Server, done chan bool) {
 
 
 func main() {
+ 
+	// 1. Initialize Database
+	// NOTE: Your database.New() is hardcoded to PostgreSQL. You might want to
+	// make this configurable based on environment variables.
+	dbService := database.New()
+ 
+	// 2. Initialize Plugin Registry and register plugins
+	registry := engine.NewPluginRegistry()
+	registry.Register("slack.send_message", slack.NewSendMessageExecutor())
+	// ... register other plugins here
+ 
+	// 3. Initialize the Workflow Engine
+	workflowEngine := engine.New(dbService, registry)
+ 
+	// 4. Initialize the HTTP Server
+	// NOTE: You will need to modify `server.NewServer()` to accept the engine
+	// so your API handlers can use it to trigger workflows.
+	apiServer := server.NewServer(workflowEngine)
 
 	server := server.NewServer()
 
@@ -48,8 +70,10 @@ func main() {
 
 	// Run graceful shutdown in a separate goroutine
 	go gracefulShutdown(server, done)
+	go gracefulShutdown(apiServer, done)
 
 	err := server.ListenAndServe()
+	err := apiServer.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		panic(fmt.Sprintf("http server error: %s", err))
 	}

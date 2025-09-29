@@ -13,7 +13,7 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 )
 
-// // Service represents a service that interacts with a database.
+// // pgservice represents a service that interacts with a postgres database.
 // type Service interface {
 // 	// Health returns a map of health status information.
 // 	// The keys and values in the map are service-specific.
@@ -24,7 +24,7 @@ import (
 // 	Close() error
 // }
 
-type service struct {
+type pgservice struct {
 	db *sql.DB
 }
 
@@ -35,7 +35,7 @@ var (
 	port       = os.Getenv("BLUEPRINT_DB_PORT")
 	host       = os.Getenv("BLUEPRINT_DB_HOST")
 	schema     = os.Getenv("BLUEPRINT_DB_SCHEMA")
-	dbInstance *service
+	dbInstance *pgservice
 )
 
 func New() Service {
@@ -48,7 +48,7 @@ func New() Service {
 	if err != nil {
 		log.Fatal(err)
 	}
-	dbInstance = &service{
+	dbInstance = &pgservice{
 		db: db,
 	}
 	return dbInstance
@@ -56,7 +56,7 @@ func New() Service {
 
 // Health checks the health of the database connection by pinging the database.
 // It returns a map with keys indicating various health statistics.
-func (s *service) Health() map[string]string {
+func (s *pgservice) Health() map[string]string {
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
@@ -109,11 +109,11 @@ func (s *service) Health() map[string]string {
 // It logs a message indicating the disconnection from the specific database.
 // If the connection is successfully closed, it returns nil.
 // If an error occurs while closing the connection, it returns the error.
-func (s *service) Close() error {
+func (s *pgservice) Close() error {
 	log.Printf("Disconnected from database: %s", database)
 	return s.db.Close()
 }
-func (s *service) Create(ctx context.Context, table string, data map[string]interface{}) (interface{}, error) {
+func (s *pgservice) Create(ctx context.Context, table string, data map[string]interface{}) (interface{}, error) {
 	if len(data) == 0 {
 		return nil, fmt.Errorf("no data to insert")
 	}
@@ -140,7 +140,7 @@ func (s *service) Create(ctx context.Context, table string, data map[string]inte
 	return id, nil
 }
 
-func (s *service) Read(ctx context.Context, table string, filter map[string]interface{}) ([]map[string]interface{}, error) {
+func (s *pgservice) Read(ctx context.Context, table string, filter map[string]interface{}) ([]map[string]interface{}, error) {
 	where := ""
 	args := []interface{}{}
 	i := 1
@@ -186,7 +186,7 @@ func (s *service) Read(ctx context.Context, table string, filter map[string]inte
 	return results, rows.Err()
 }
 
-func (s *service) Update(ctx context.Context, table string, filter map[string]interface{}, update map[string]interface{}) (int64, error) {
+func (s *pgservice) Update(ctx context.Context, table string, filter map[string]interface{}, update map[string]interface{}) (int64, error) {
 	if len(update) == 0 {
 		return 0, fmt.Errorf("no update data provided")
 	}
@@ -220,7 +220,7 @@ func (s *service) Update(ctx context.Context, table string, filter map[string]in
 	return res.RowsAffected()
 }
 
-func (s *service) Delete(ctx context.Context, table string, filter map[string]interface{}) (int64, error) {
+func (s *pgservice) Delete(ctx context.Context, table string, filter map[string]interface{}) (int64, error) {
 	where := ""
 	args := []interface{}{}
 	i := 1
@@ -242,7 +242,7 @@ func (s *service) Delete(ctx context.Context, table string, filter map[string]in
 	return res.RowsAffected()
 }
 
-func (s *service) Exec(ctx context.Context, query string, args ...interface{}) (interface{}, error) {
+func (s *pgservice) Exec(ctx context.Context, query string, args ...interface{}) (interface{}, error) {
 	res, err := s.db.ExecContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
@@ -250,7 +250,7 @@ func (s *service) Exec(ctx context.Context, query string, args ...interface{}) (
 	return res.RowsAffected()
 }
 
-func (s *service) Query(ctx context.Context, query string, args ...interface{}) ([]map[string]interface{}, error) {
+func (s *pgservice) Query(ctx context.Context, query string, args ...interface{}) ([]map[string]interface{}, error) {
 	rows, err := s.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
