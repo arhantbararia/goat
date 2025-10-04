@@ -5,7 +5,7 @@
 
 ## Introduction
 
-**GOAT** (Go Orchestration & Automation Toolkit) is a powerful backend automation engine inspired by platforms like Zapier, IFTTT, and n8n. Built in Go, GOAT enables developers and teams to automate workflows by connecting triggers and actions across services. It solves the problem of repetitive manual tasks and complex integrations, making automation accessible for backend engineers, DevOps, and SaaS builders.
+**GOAT** (Go Orchestration & Automation Toolkit) is a backend engine for building workflow automation systems. Written in Go, GOAT provides the core components for orchestrating complex tasks across distributed services. It is designed for developers and DevOps engineers who need a robust foundation to create custom automation platforms, integrate internal tools, or embed workflow capabilities directly into their own applications. With a modular plugin architecture, developers can easily extend GOAT with new integrations and share them as reusable modules.
 
 ---
 
