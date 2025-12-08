@@ -111,3 +111,39 @@ Contributions are welcome! To get started:
 ## Credits
 
 Inspired by [Zapier](https://zapier.com), [n8n](https://n8n.io), and [IFTTT](https://ifttt.com).
+```
+goat
+├─ .air.toml
+├─ cmd
+│  └─ api
+├─ docker-compose.yml
+├─ go.mod
+├─ go.sum
+├─ internal
+│  ├─ database
+│  │  ├─ database.go
+│  │  ├─ database_test.go
+│  │  ├─ mongodb.go
+│  │  ├─ mysql.go
+│  │  ├─ postgres.go
+│  │  └─ sqlite.go
+│  ├─ models
+│  │  ├─ engine.go
+│  │  ├─ example_workflow.json
+│  │  ├─ executor.go
+│  │  ├─ node.go
+│  │  ├─ registry.go
+│  │  ├─ runner.go
+│  │  ├─ send_message.go
+│  │  └─ workflow.go
+│  └─ server
+│     ├─ routes.go
+│     ├─ routes_test.go
+│     ├─ server.go
+│     └─ urls.go
+├─ Makefile
+├─ pkg
+├─ README.md
+└─ scripts
+
+```
