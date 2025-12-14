@@ -1,4 +1,4 @@
-package main 
+package scheduler 
 
 type Scheduler interface {
 	SelectCandidateNodes()

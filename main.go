@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"time"
 
-	task "github.com/arhantbararia/goat/Task"
 	"github.com/arhantbararia/goat/manager"
 	"github.com/arhantbararia/goat/node"
+	"github.com/arhantbararia/goat/task"
 	"github.com/arhantbararia/goat/worker"
 	"github.com/golang-collections/collections/queue"
 	"github.com/google/uuid"
+	"github.com/moby/moby/client"
 )
 
 func main() {
@@ -65,4 +66,43 @@ func main() {
 	}
 	fmt.Printf("node: %v\n", n)
 
+}
+
+func createContainer() (*task.Docker, *task.DockerResult) {
+	c := task.Config{
+		Name:  "test-container-1",
+		Image: "postgres:13",
+		Env: []string{
+			"POSTGRES_USER=test",
+			"POSTGRES_PASSWORD=secret",
+		},
+	}
+
+	dc, _ := client.New(client.FromEnv)
+	d := task.Docker{
+		Client: *dc,
+		Config: c,
+	}
+
+	result := d.Run()
+	if result.Error != nil {
+		fmt.Printf("%v\n", result.Error)
+		return nil, nil
+	}
+
+	fmt.Printf("Container %s is running with config %v\n", result.ContainerId, c)
+	return &d, &result
+
+}
+
+func stopContainer(d *task.Docker, id string) *task.DockerResult {
+	result := d.Stop(id)
+	if result.Error != nil {
+		fmt.Printf("%v\n", result.Error)
+		return nil
+	}
+
+	fmt.Printf(
+		"Container %s has been stopped and removed\n", result.ContainerId)
+	return &result
 }

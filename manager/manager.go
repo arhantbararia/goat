@@ -3,7 +3,7 @@ package manager
 import (
 	"fmt"
 
-	task "github.com/arhantbararia/goat/Task"
+	"github.com/arhantbararia/goat/task"
 	"github.com/golang-collections/collections/queue"
 	"github.com/google/uuid"
 )
