@@ -3,8 +3,8 @@ package worker
 import (
 	"fmt"
 
-	"github.com/arhantbararia/goat/task"
-	"github.com/docker/docker/libcontainerd/queue"
+	task "github.com/arhantbararia/goat/Task"
+	"github.com/golang-collections/collections/queue"
 	"github.com/google/uuid"
 )
 

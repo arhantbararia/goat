@@ -1,8 +1,10 @@
 package manager
 
 import (
+	"fmt"
+
 	task "github.com/arhantbararia/goat/Task"
-	"github.com/docker/docker/libcontainerd/queue"
+	"github.com/golang-collections/collections/queue"
 	"github.com/google/uuid"
 )
 
@@ -11,7 +13,18 @@ type Manager struct {
 	TaskDb        map[string][]*task.Task
 	EventDb       map[string][]*task.TaskEvent
 	Workers       []string
-	WorkerTreeMap map[string][]uuid.NewUUID
+	WorkerTreeMap map[string][]uuid.UUID
 	TaskWorkerMap map[uuid.UUID]string
 }
 
+func (m *Manager) SelectWorker() {
+	fmt.Println("I select good workers")
+}
+
+func (m *Manager) UpdateTasks() {
+	fmt.Println("I will update Tasks")
+}
+
+func (m *Manager) SendWork() {
+	fmt.Println("I will send work to workers")
+}
