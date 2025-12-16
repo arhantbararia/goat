@@ -9,10 +9,9 @@ import (
 	"time"
 
 	"github.com/docker/docker/pkg/stdcopy"
-	"github.com/docker/go-connections/nat"
 	"github.com/google/uuid"
-	"github.com/moby/moby/api/types"
 	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/api/types/network"
 	"github.com/moby/moby/client"
 )
 
@@ -28,12 +27,13 @@ const (
 
 type Task struct {
 	ID            uuid.UUID
+	ContainerID   string
 	Name          string
 	State         State
 	Image         string
 	Memory        int //required memory
 	Disk          int //required disk space
-	ExposedPorts  nat.PortSet
+	ExposedPorts  network.PortSet
 	PortBindings  map[string]string
 	RestartPolicy string
 	StartTime     time.Time
@@ -42,10 +42,11 @@ type Task struct {
 
 type Config struct {
 	Name          string
+	ContainerID   string
 	AttachStdin   bool
 	AttachStdout  bool
 	AttachStderr  bool
-	ExposedPorts  nat.PortSet
+	ExposedPorts  network.PortSet
 	Cmd           []string
 	Image         string
 	Cpu           float64
@@ -73,7 +74,7 @@ func (d *Docker) Run() DockerResult {
 	reader, err := d.Client.ImagePull(
 		ctx,
 		d.Config.Image,
-		types.ImagePullOptions{},
+		client.ImagePullOptions{},
 	)
 	if err != nil {
 		log.Printf("Error Pulling image: %s: %v\n", d.Config.Image, err)
@@ -103,13 +104,21 @@ func (d *Docker) Run() DockerResult {
 		PublishAllPorts: true,
 	}
 
+	// &cc,
+	// 	&hc,
+	// 	nil,
+	// 	nil,
+	// 	d.Config.Name
+
 	resp, err := d.Client.ContainerCreate(
 		ctx,
-		&cc,
-		&hc,
-		nil,
-		nil,
-		d.Config.Name,
+		client.ContainerCreateOptions{
+			Config:           &cc,
+			HostConfig:       &hc,
+			NetworkingConfig: nil,
+			Platform:         nil,
+			Name:             d.Config.Name,
+		},
 	)
 
 	if err != nil {
@@ -117,18 +126,20 @@ func (d *Docker) Run() DockerResult {
 		return DockerResult{Error: err}
 	}
 
-	err = d.Client.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
+	_, err = d.Client.ContainerStart(ctx, resp.ID, client.ContainerStartOptions{})
 	if err != nil {
 		log.Printf("error starting the container. ID: %s, %v \n", resp.ID, err)
 		return DockerResult{Error: err}
 	}
 
-	d.Config.Runtime.ContainerID = resp.ID
+	d.Config.ContainerID = resp.ID
 
-	out, err := cli.ContainerLogs(
+	out, err := d.Client.ContainerLogs(
 		ctx,
 		resp.ID,
-		types.ContainerLogsOptions{ShowStdOut: true, ShowStderr: true},
+		client.ContainerLogsOptions{
+			ShowStdout: true,
+			ShowStderr: true},
 	)
 	if err != nil {
 		log.Printf("Error getting logs for container %s: %v\n", resp.ID, err)
@@ -139,7 +150,7 @@ func (d *Docker) Run() DockerResult {
 
 	return DockerResult{
 		ContainerId: resp.ID,
-		Action:      start,
+		Action:      "start",
 		Result:      "success",
 	}
 
@@ -148,13 +159,13 @@ func (d *Docker) Run() DockerResult {
 func (d *Docker) Stop(id string) DockerResult {
 	log.Printf("Attempting to stop container. ID: %v \n", id)
 	ctx := context.Background()
-	err := d.Client.ContainerStop(ctx, id, nil)
+	_, err := d.Client.ContainerStop(ctx, id, client.ContainerStopOptions{})
 	if err != nil {
 		log.Printf("Error stopping container %s: %v\n", id, err)
 		return DockerResult{Error: err}
 	}
 
-	err := d.Client.ContainerRemove(ctx, id, types.ContainerRemoveOptions{
+	_, err = d.Client.ContainerRemove(ctx, id, client.ContainerRemoveOptions{
 		RemoveVolumes: true,
 		RemoveLinks:   false,
 		Force:         false,
