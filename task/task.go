@@ -25,6 +25,27 @@ const (
 	Failed
 )
 
+var stateTransitionMap = map[State][]State{
+	Pending:   []State{Scheduled},
+	Scheduled: []State{Scheduled, Running, Failed},
+	Running:   []State{Running, Completed, Failed},
+	Completed: []State{},
+	Failed:    []State{},
+}
+
+func Contains(states []State, state State) bool {
+	for _, s := range states {
+		if s == state {
+			return true
+		}
+	}
+	return false
+}
+
+func ValidaStateTransition(src State, dst State) bool {
+	return Contains(stateTransitionMap[src], dst)
+}
+
 type Task struct {
 	ID            uuid.UUID
 	ContainerID   string
@@ -56,6 +77,18 @@ type Config struct {
 	RestartPolicy string
 }
 
+func NewConfig(task *Task) Config {
+	return Config{
+		Name:          task.Name,
+		ContainerID:   task.ContainerID,
+		ExposedPorts:  task.ExposedPorts,
+		Image:         task.Image,
+		Memory:        int64(task.Memory),
+		Disk:          int64(task.Disk),
+		RestartPolicy: task.RestartPolicy,
+	}
+}
+
 type Docker struct {
 	Client client.Client
 	Config Config
@@ -66,6 +99,18 @@ type DockerResult struct {
 	Action      string
 	ContainerId string
 	Result      string
+}
+
+func NewDocker(conf Config) *Docker {
+	new_client, err := client.New()
+	if err != nil || new_client == nil {
+		log.Println("Docker daemon unreachable")
+	}
+
+	return &Docker{
+		Client: *new_client,
+		Config: conf,
+	}
 }
 
 func (d *Docker) Run() DockerResult {
