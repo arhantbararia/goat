@@ -38,7 +38,10 @@ func main() {
 }
 
 func runTasks(w *worker.Worker) {
+	fmt.Println("Running Task collection Loop")
 	for {
+
+		fmt.Println("Queued Tasks: ", w.Queue.Len())
 		if w.Queue.Len() != 0 {
 			result := w.RunTask()
 			if result.Error != nil {
@@ -46,6 +49,8 @@ func runTasks(w *worker.Worker) {
 			} else {
 				log.Println("No tasks to process currently")
 			}
+
+		} else {
 			log.Printf("Sleeping for %v seconds", SLEEP_TIME)
 			time.Sleep(time.Duration(SLEEP_TIME) * time.Second)
 
