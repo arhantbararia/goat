@@ -15,6 +15,7 @@ type Worker struct {
 	Queue     queue.Queue
 	Db        map[uuid.UUID]*task.Task
 	TaskCount int
+	Stats     *Stats
 }
 
 func (w *Worker) CollectState() {
@@ -122,4 +123,13 @@ func (w *Worker) GetTasks() []task.Task {
 
 	return tasks
 
+}
+
+func (w *Worker) CollectStats() {
+	for {
+		log.Println("Collecting state")
+		w.Stats = GetStats()
+		w.Stats.TaskCount = w.TaskCount
+		time.Sleep(15 * time.Second)
+	}
 }
