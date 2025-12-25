@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"time"
 
+	"github.com/arhantbararia/goat/manager"
 	"github.com/arhantbararia/goat/task"
 	"github.com/arhantbararia/goat/worker"
 	"github.com/golang-collections/collections/queue"
@@ -15,8 +15,11 @@ var SLEEP_TIME = 7
 
 func main() {
 
-	host := "127.0.0.1"
-	port := 8000
+	worker_host := "127.0.0.1"
+	worker_port := 8000
+
+	mhost := "127.0.0.1"
+	mPort := 5000
 
 	fmt.Println("Starting Goat worker")
 	w := worker.Worker{
@@ -24,38 +27,62 @@ func main() {
 		Db:    make(map[uuid.UUID]*task.Task),
 	}
 
+	////// Starting Worker
 	//runtime loop
-	go runTasks(&w)
+	go w.RunTasks()
 
-	api := worker.API{
-		Address: host,
-		Port:    port,
+	go w.CollectStats()
+
+	wapi := worker.API{
+		Address: worker_host,
+		Port:    worker_port,
 		Worker:  &w,
 	}
 
-	api.Start()
+	go wapi.Start()
 
-}
+	workers := []string{fmt.Sprintf("%s:%d", worker_host, worker_port)}
 
-func runTasks(w *worker.Worker) {
-	fmt.Println("Running Task collection Loop")
+	//////////// Starting Manager
+
+	m := manager.New(workers)
+
+	mapi := manager.API{
+		Address: mhost,
+		Port:    mPort,
+		Manager: m,
+	}
+
+	go m.ProcessTasks()
+	go m.UpdateTasks()
+
+	go mapi.Start()
+
+	// Adding Tasks to manager queue
+
+	for i := 0; i < 3; i++ {
+		t := task.Task{
+			ID:    uuid.New(),
+			Name:  fmt.Sprintf("test-container-%d", i),
+			State: task.Scheduled,
+			Image: "strm/helloworld-http",
+		}
+		te := task.TaskEvent{
+			ID:    uuid.New(),
+			State: task.Running,
+			Task:  t,
+		}
+		m.AddTask(te)
+		m.SendWork()
+	}
+
 	for {
-
-		fmt.Println("Queued Tasks: ", w.Queue.Len())
-		if w.Queue.Len() != 0 {
-			result := w.RunTask()
-			if result.Error != nil {
-				log.Println("Error running task- ", result.Error)
-			} else {
-				log.Println("No tasks to process currently")
-			}
-
-		} else {
-			log.Printf("Sleeping for %v seconds", SLEEP_TIME)
-			time.Sleep(time.Duration(SLEEP_TIME) * time.Second)
-
+		for _, t := range m.TaskDb {
+			fmt.Printf("[Manager] Task: id: %s, state: %d\n", t.ID, t.State)
+			time.Sleep(15 * time.Second)
 		}
 	}
+
 }
 
 //// //////////////////////// using task structs raw

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/arhantbararia/goat/task"
 	"github.com/arhantbararia/goat/worker"
@@ -36,7 +37,7 @@ func (m *Manager) SelectWorker() string {
 
 }
 
-func (m *Manager) UpdateTasks() {
+func (m *Manager) updateTasks() {
 	for _, worker := range m.Workers {
 		log.Printf("Checking worker %v for task updates ", worker)
 		url := fmt.Sprintf("http://%s/tasks", worker)
@@ -136,6 +137,23 @@ func (m *Manager) SendWork() {
 	}
 }
 
+func (m *Manager) UpdateTasks() {
+	for {
+		fmt.Printf("[Manager] Updating Tasks from %d workers \n", len(m.Workers))
+		m.updateTasks()
+		time.Sleep(15 * time.Second)
+	}
+}
+
+func (m *Manager) ProcessTasks() {
+	for {
+		log.Println("Processing any tasks in the queue")
+		m.SendWork()
+		log.Println("sleeping for 10 seconds")
+		time.Sleep(10 * time.Second)
+	}
+}
+
 func (m *Manager) AddTask(te task.TaskEvent) {
 	m.Pending.Enqueue(te)
 }
@@ -161,4 +179,13 @@ func New(workers []string) *Manager {
 		TaskWorkerMap: taskWorkerMap,
 	}
 
+}
+
+func (m *Manager) GetTasks() []*task.Task {
+	tasks := []*task.Task{}
+	for _, t := range m.TaskDb {
+		tasks = append(tasks, t)
+	}
+
+	return tasks
 }

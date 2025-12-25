@@ -10,6 +10,8 @@ import (
 	"github.com/google/uuid"
 )
 
+var WORKER_SLEEP_TIME = 15
+
 type Worker struct {
 	Name      string
 	Queue     queue.Queue
@@ -18,12 +20,7 @@ type Worker struct {
 	Stats     *Stats
 }
 
-func (w *Worker) CollectState() {
-	fmt.Println("I will collect statistics")
-
-}
-
-func (w *Worker) RunTask() task.DockerResult {
+func (w *Worker) runTask() task.DockerResult {
 	t := w.Queue.Dequeue()
 	if t == nil {
 		log.Println("No task in the queue")
@@ -131,5 +128,26 @@ func (w *Worker) CollectStats() {
 		w.Stats = GetStats()
 		w.Stats.TaskCount = w.TaskCount
 		time.Sleep(15 * time.Second)
+	}
+}
+
+func (w *Worker) RunTasks() {
+	fmt.Println("Running Task collection Loop")
+	for {
+
+		fmt.Println("Queued Tasks: ", w.Queue.Len())
+		if w.Queue.Len() != 0 {
+			result := w.runTask()
+			if result.Error != nil {
+				log.Println("Error running task- ", result.Error)
+			} else {
+				log.Println("No tasks to process currently")
+			}
+
+		} else {
+			log.Printf("Sleeping for %v seconds", WORKER_SLEEP_TIME)
+			time.Sleep(time.Duration(WORKER_SLEEP_TIME) * time.Second)
+
+		}
 	}
 }
