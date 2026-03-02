@@ -1,93 +1,91 @@
 # GOAT 🐐
 *Go Orchestration & Automation Toolkit*
 
----
-
 ## Introduction
 
-**GOAT** (Go Orchestration & Automation Toolkit) is a backend engine for building workflow automation systems. Written in Go, GOAT provides the core components for orchestrating complex tasks across distributed services. It is designed for developers and DevOps engineers who need a robust foundation to create custom automation platforms, integrate internal tools, or embed workflow capabilities directly into their own applications. With a modular plugin architecture, developers can easily extend GOAT with new integrations and share them as reusable modules.
+**GOAT** is a lightweight, distributed task orchestration engine written in Go. Inspired by platforms like Kubernetes, it provides a simple yet powerful foundation for scheduling and running containerized tasks across a cluster of worker nodes. It's designed for developers and DevOps engineers who need a simple orchestrator for managing distributed workloads without the complexity of a full-blown container platform.
+
+---
+
+## Core Concepts & Architecture
+
+GOAT operates on a manager-worker architecture:
+-   **Manager**: The central control plane. It exposes a REST API for users to submit tasks. The manager maintains the state of all tasks, selects appropriate workers, and dispatches the work.
+-   **Worker**: A node responsible for executing tasks. It receives instructions from the manager, runs the specified Docker container, and reports the task's status back to the manager.
 
 ---
 
 ## Features
 
-- **Workflow Engine**: Define and execute multi-step workflows
-- **Modular Plugin System**: Easily add new triggers and actions
-- **Trigger & Action Nodes**: Compose workflows from modular building blocks
-- **Execution Engine**: Robust, concurrent workflow execution
-- **Webhooks**: Receive and process external events
-- **Scheduling**: Run workflows on a schedule (cron-like)
-- **REST API**: Manage workflows and executions programmatically
-- **Execution Logs**: Track workflow runs and debug failures
-- **Extensible**: Add custom plugins for new integrations
+-   **Distributed Task Execution**: Run tasks as Docker containers across multiple worker nodes.
+-   **Manager-Worker Architecture**: A central manager orchestrates tasks on a cluster of workers.
+-   **State Management**: Tracks the lifecycle of each task (e.g., `Scheduled`, `Running`, `Completed`, `Failed`).
+-   **REST API**: Simple HTTP-based API to submit, view, and stop tasks.
+-   **Round-Robin Scheduling**: Basic load distribution by assigning tasks to workers in a round-robin fashion.
+-   **Built in Go**: A single, statically-linked binary for both manager and worker components, ensuring easy deployment.
 
 ---
 
 ## Getting Started
+
+The `main.go` file provides a simple demonstration that runs one manager and one worker on your local machine.
 
 ```bash
 # Clone the repository
 git clone https://github.com/your-org/goat.git
 cd goat
 
-# Build the project
-go build -o goat ./cmd/goat
+# Tidy dependencies
+go mod tidy
 
-# Run locally
-./goat serve
+# Run the demo (starts one manager and one worker)
+go run main.go
 ```
 
 ---
-
 ## Project Structure
 
-- `cmd/` – Main application entrypoints
-- `internal/` – Core workflow engine and business logic
-- `plugins/` – Built-in and community plugins (triggers/actions)
-- `api/` – REST API handlers and routes
-- `webhooks/` – Webhook receivers and dispatchers
-- `scheduler/` – Workflow scheduling logic
-- `docs/` – Documentation and guides
-- `examples/` – Example workflows and plugin templates
-
+-   `manager/` – Contains the logic for the central manager node, including task scheduling and worker communication.
+-   `worker/` – Contains the logic for worker nodes, including task execution via Docker.
+-   `task/` – Defines the core `Task` data structures and Docker interaction logic.
+-   `main.go` – The main application entrypoint for running a demo cluster.
 ---
 
-## Example Usage
 
-**Sample Workflow Definition (YAML):**
-```yaml
-name: "Send Slack Alert on New GitHub Issue"
-triggers:
-    - type: github.issue.created
-        repo: your-org/your-repo
-actions:
-    - type: slack.send_message
-        channel: "#alerts"
-        message: "New GitHub issue: {{trigger.title}}"
+## API Usage
+
+You can interact with the manager's API to control tasks.
+
+**Submit a New Task:**
+```http
+POST /tasks
+"Task": {
+        "Name": "my-new-task",
+        "Image": "strm/helloworld-http"
+    }
+}
 ```
 
-**API Usage (Create Workflow):**
+**List All Tasks:**
 ```http
-POST /api/workflows
-Content-Type: application/json
+GET /tasks
+```
 
-{
-    "name": "Send Slack Alert on New GitHub Issue",
-    "triggers": [{ "type": "github.issue.created", "repo": "your-org/your-repo" }],
-    "actions": [{ "type": "slack.send_message", "channel": "#alerts", "message": "New GitHub issue: {{trigger.title}}" }]
-}
+**Stop a Task:**
+```http
+DELETE /tasks/{taskID}
 ```
 
 ---
 
 ## Roadmap
 
-- [ ] User authentication & RBAC
-- [ ] Visual GUI workflow builder
-- [ ] AI-powered nodes (e.g., LLM actions)
-- [ ] One-click deployment (Docker, Kubernetes)
-- [ ] Plugin marketplace
-- [ ] Advanced monitoring & analytics
+-   [ ] **Persistence**: Add a database layer (e.g., SQLite, Postgres) to persist task state.
+-   [ ] **Advanced Scheduling**: Implement resource-aware scheduling instead of simple round-robin.
+-   [ ] **Fault Tolerance**: Improve handling of worker failures and enable task retries.
+-   [ ] **Worker Discovery**: Implement a mechanism for workers to dynamically register with the manager.
+-   [ ] **CLI Tool**: Develop a command-line interface for interacting with the manager.
+-   [ ] **Improved API**: Enhance the API with more endpoints and better error handling.
 
 ---
 
@@ -95,22 +93,22 @@ Content-Type: application/json
 
 Contributions are welcome! To get started:
 
-1. Fork the repo and create your branch
-2. Submit pull requests for features, bugfixes, or docs
-3. Open issues for bugs, feature requests, or plugin ideas
-4. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for guidelines
+1.  Fork the repo and create your branch
+2.  Submit pull requests for features, bugfixes, or documentation improvements.
+3.  See `CONTRIBUTING.md` for more detailed guidelines.
 
 ---
 
 ## License
 
-[MIT License](LICENSE)
+MIT License
 
 ---
 
 ## Credits
 
-Inspired by [Zapier](https://zapier.com), [n8n](https://n8n.io), and [IFTTT](https://ifttt.com).
+Inspired by container orchestration platforms like Kubernetes and HashiCorp Nomad.
+
 ```
 goat
 ├─ .air.toml
